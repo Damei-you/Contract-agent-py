@@ -1,4 +1,7 @@
-"""create business tables
+"""create business tables.
+
+本迁移创建阶段 0-2 所需的业务权威表。向量索引表不在这里创建，后续阶段会交给
+LangChain PGVector/pgvector 集成管理。
 
 Revision ID: 0001_create_business_tables
 Revises:
@@ -18,6 +21,8 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    """创建合同、条款、审批记录和制度知识库表。"""
+
     op.create_table(
         "contracts",
         sa.Column("id", sa.String(length=64), primary_key=True),
@@ -51,6 +56,7 @@ def upgrade() -> None:
         sa.Column("text_for_embedding", sa.Text(), nullable=False),
         sa.Column("related_amount_field", sa.String(length=64), nullable=False, server_default=""),
         sa.Column("review_priority", sa.String(length=32), nullable=False, server_default=""),
+        # 条款必须随合同删除，防止后续合同通道 RAG 召回孤儿条款。
         sa.ForeignKeyConstraint(["contract_id"], ["contracts.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("contract_id", "chunk_id"),
     )
@@ -64,10 +70,12 @@ def upgrade() -> None:
         sa.Column("decision", sa.String(length=32), nullable=False),
         sa.Column("decision_time", sa.DateTime(timezone=True), nullable=True),
         sa.Column("comment_summary", sa.Text(), nullable=False, server_default=""),
+        # 这些 JSON 字段保留外部导入和模型输出结构，查询需求明确后再拆明细表。
         sa.Column("linked_policy_ids_json", sa.JSON(), nullable=False),
         sa.Column("linked_clause_chunk_ids_json", sa.JSON(), nullable=False),
         sa.Column("risk_items_json", sa.JSON(), nullable=False),
         sa.Column("vector_doc_id", sa.String(length=128), nullable=True),
+        # 审批记录依附于合同生命周期，不作为独立长期事实保存。
         sa.ForeignKeyConstraint(["contract_id"], ["contracts.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("contract_id", "approval_record_id"),
     )
@@ -101,6 +109,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """按依赖关系逆序删除业务表。"""
+
     op.drop_index("idx_policy_knowledge_contract_type", table_name="policy_knowledge")
     op.drop_index("idx_policy_knowledge_severity", table_name="policy_knowledge")
     op.drop_index("idx_policy_knowledge_domain", table_name="policy_knowledge")
@@ -111,4 +121,3 @@ def downgrade() -> None:
     op.drop_index("idx_clause_chunks_contract_id", table_name="clause_chunks")
     op.drop_table("clause_chunks")
     op.drop_table("contracts")
-

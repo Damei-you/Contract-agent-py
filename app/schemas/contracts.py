@@ -1,3 +1,8 @@
+"""合同相关 API DTO。
+
+字段设计优先兼容参考项目 Vue 前端和 Java DTO；内部服务层再映射到领域对象。
+"""
+
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -8,6 +13,8 @@ from app.schemas.base import ApiModel
 
 
 class ClauseChunkDto(ApiModel):
+    """合同条款分块导入 DTO，是后续合同 RAG 的最小文本单元。"""
+
     id: str
     clause_code: str = ""
     clause_title: str = ""
@@ -22,10 +29,17 @@ class ClauseChunkDto(ApiModel):
     @field_validator("risk_flag", mode="before")
     @classmethod
     def parse_risk_flag(cls, value: object) -> RiskSeverity:
+        """支持中文/英文风险等级，降低示例数据和人工录入的格式敏感度。"""
+
         return RiskSeverity.from_flexible(value)
 
 
 class ImportContractRequest(ApiModel):
+    """合同导入请求。
+
+    `type` 是参考项目已有入参名，内部用 `contract_type` 避免覆盖 Python 内置概念。
+    """
+
     id: str
     contract_type: ContractType = Field(alias="type")
     party_a_name: str
@@ -48,19 +62,27 @@ class ImportContractRequest(ApiModel):
     @field_validator("contract_type", mode="before")
     @classmethod
     def parse_contract_type(cls, value: object) -> ContractType:
+        """兼容英文别名和中文显示名。"""
+
         return ContractType.from_flexible(value)
 
     @field_validator("risk_tier", mode="before")
     @classmethod
     def parse_risk_tier(cls, value: object) -> RiskSeverity:
+        """兼容中文风险等级输入。"""
+
         return RiskSeverity.from_flexible(value)
 
 
 class ImportContractResponse(ApiModel):
+    """合同导入响应，只返回稳定合同 ID，便于前端跳转后续页面。"""
+
     contract_id: str
 
 
 class RiskItemDto(ApiModel):
+    """审批记录中携带的结构化风险项 DTO。"""
+
     code: str
     severity: RiskSeverity
     detail: str
@@ -72,10 +94,14 @@ class RiskItemDto(ApiModel):
     @field_validator("severity", mode="before")
     @classmethod
     def parse_severity(cls, value: object) -> RiskSeverity:
+        """风险项严重度与合同风险等级共用同一套解析规则。"""
+
         return RiskSeverity.from_flexible(value)
 
 
 class ImportApprovalRecordDto(ApiModel):
+    """单条审批记录导入 DTO。"""
+
     id: str
     step_no: int
     approver_role: str
@@ -90,14 +116,19 @@ class ImportApprovalRecordDto(ApiModel):
     @field_validator("decision", mode="before")
     @classmethod
     def parse_decision(cls, value: object) -> ApprovalDecision:
+        """审批结论支持中文别名，方便迁移历史审批数据。"""
+
         return ApprovalDecision.from_flexible(value)
 
 
 class ImportApprovalRecordsRequest(ApiModel):
+    """审批记录全量导入请求。"""
+
     records: list[ImportApprovalRecordDto] = Field(default_factory=list)
 
 
 class ImportApprovalRecordsResponse(ApiModel):
+    """审批记录导入响应。"""
+
     contract_id: str
     imported_count: int
-

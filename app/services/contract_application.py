@@ -1,3 +1,9 @@
+"""合同应用服务。
+
+应用服务负责把 API DTO 映射为领域对象，并控制业务事务边界。阶段 0-2 只处理
+业务权威表；合同条款向量入库会在阶段 3 作为可重建的派生索引接入。
+"""
+
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -13,14 +19,26 @@ from app.schemas.contracts import (
 
 
 class ContractApplicationService:
+    """合同用例编排入口。
+
+    该类不直接依赖 FastAPI，便于在测试、CLI 或未来异步任务中复用同一套业务逻辑。
+    """
+
     def __init__(self, db: Session, contract_repository: ContractRepository) -> None:
         self.db = db
         self.contract_repository = contract_repository
 
     def import_contract(self, request: ImportContractRequest) -> ImportContractResponse:
+        """创建合同和条款分块。
+
+        同一合同 ID 重复导入会返回 409，避免调用方误以为该接口具备覆盖更新语义。
+        """
+
         if self.contract_repository.exists(request.id):
             raise ConflictError(f"Contract already exists: {request.id}")
 
+        # DTO 字段保持参考项目 API 命名，领域对象使用 Python 内部命名；
+        # 映射集中在 service 层，避免仓储层感知 HTTP 请求结构。
         contract = Contract(
             id=request.id,
             contract_type=request.contract_type,
@@ -57,6 +75,8 @@ class ContractApplicationService:
             ],
         )
         try:
+            # 合同主数据和条款分块必须同事务提交，否则后续 RAG 会出现“有合同无条款”
+            # 或“有条款无合同”的不一致业务状态。
             self.contract_repository.add(contract)
             self.db.commit()
         except SQLAlchemyError as exc:
@@ -69,9 +89,16 @@ class ContractApplicationService:
         contract_id: str,
         request: ImportApprovalRecordsRequest,
     ) -> ImportApprovalRecordsResponse:
+        """全量替换合同审批记录。
+
+        审批记录是合同的附属事实，必须先确认合同存在；不存在时返回 404 而不是静默创建。
+        """
+
         if not self.contract_repository.exists(contract_id):
             raise NotFoundError(f"Contract not found: {contract_id}")
 
+        # 风险项当前存入 JSON 字段，保留参考项目的结构化输出形状；
+        # 后续查询维度变多时再拆成明细表。
         records = [
             ApprovalRecord(
                 contract_id=contract_id,
@@ -100,10 +127,10 @@ class ContractApplicationService:
             for record in request.records
         ]
         try:
+            # replace_approval_records 内部先删后写，commit 放在 service 层统一处理。
             self.contract_repository.replace_approval_records(contract_id, records)
             self.db.commit()
         except SQLAlchemyError as exc:
             self.db.rollback()
             raise ServiceUnavailableError(f"Database write failed: {exc}") from exc
         return ImportApprovalRecordsResponse(contract_id=contract_id, imported_count=len(records))
-

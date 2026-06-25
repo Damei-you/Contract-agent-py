@@ -1,14 +1,24 @@
+"""领域枚举和值解析。
+
+枚举在数据库中按英文稳定值保存；入参解析支持中文显示名和英文别名，方便演示数据、
+CSV 导入和前端表单共用同一套 API。
+"""
+
 from enum import StrEnum
 
 from app.core.exceptions import BadRequestError
 
 
 class ContractType(StrEnum):
+    """合同类型。"""
+
     PROCUREMENT = "PROCUREMENT"
     SERVICE = "SERVICE"
 
     @classmethod
     def from_flexible(cls, value: object) -> "ContractType":
+        """将 API/导入数据中的多种合同类型写法归一化。"""
+
         if isinstance(value, cls):
             return value
         normalized = str(value or "").strip().lower()
@@ -29,12 +39,16 @@ class ContractType(StrEnum):
 
 
 class RiskSeverity(StrEnum):
+    """风险严重度。"""
+
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
 
     @classmethod
     def from_flexible(cls, value: object) -> "RiskSeverity":
+        """将中文显示名或英文枚举名归一化为稳定枚举值。"""
+
         if isinstance(value, cls):
             return value
         normalized = str(value or "").strip().lower()
@@ -47,6 +61,8 @@ class RiskSeverity(StrEnum):
 
 
 class ApprovalDecision(StrEnum):
+    """审批结论。"""
+
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
     CONDITIONAL_APPROVED = "CONDITIONAL_APPROVED"
@@ -54,6 +70,8 @@ class ApprovalDecision(StrEnum):
 
     @classmethod
     def from_flexible(cls, value: object) -> "ApprovalDecision":
+        """兼容历史审批数据中的中文结论。"""
+
         if isinstance(value, cls):
             return value
         normalized = str(value or "").strip().lower()

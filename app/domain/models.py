@@ -1,3 +1,9 @@
+"""领域对象。
+
+领域对象保持与业务概念一致，不绑定 SQLAlchemy 或 FastAPI，便于服务层、仓储层和未来
+LangGraph 节点共同复用。
+"""
+
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
@@ -7,6 +13,8 @@ from app.domain.enums import ApprovalDecision, ContractType, RiskSeverity
 
 @dataclass(slots=True)
 class ClauseChunk:
+    """合同条款分块，是合同 RAG 的最小事实单元。"""
+
     contract_id: str
     chunk_id: str
     clause_code: str
@@ -22,6 +30,8 @@ class ClauseChunk:
 
 @dataclass(slots=True)
 class Contract:
+    """合同主实体，聚合合同基本信息和条款分块。"""
+
     id: str
     contract_type: ContractType
     party_a_name: str
@@ -44,6 +54,11 @@ class Contract:
 
 @dataclass(slots=True)
 class RiskItem:
+    """结构化风险项。
+
+    related_* 字段用于把模型判断追溯到合同条款和制度依据，后续前端可据此展示证据。
+    """
+
     code: str
     severity: RiskSeverity
     detail: str
@@ -55,6 +70,8 @@ class RiskItem:
 
 @dataclass(slots=True)
 class ApprovalRecord:
+    """合同审批历史记录。"""
+
     contract_id: str
     approval_record_id: str
     step_no: int
@@ -70,6 +87,8 @@ class ApprovalRecord:
 
 @dataclass(slots=True)
 class PolicyKnowledgeItem:
+    """制度知识条目，是跨合同共享的规则来源。"""
+
     policy_id: str
     policy_domain: str
     applies_to_contract_type: str
@@ -80,4 +99,3 @@ class PolicyKnowledgeItem:
     required_evidence: str
     escalation_role: str
     vector_doc_id: str | None = None
-

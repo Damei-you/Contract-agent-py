@@ -1,3 +1,9 @@
+"""测试夹具。
+
+阶段 0-2 的测试只验证业务表和 API 语义，因此使用 SQLite 内存库即可快速反馈；
+pgvector/PostgreSQL 集成测试会在向量阶段再补充。
+"""
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -11,6 +17,8 @@ from app.main import app
 
 @pytest.fixture()
 def db_session() -> Session:
+    """为每个测试创建隔离的内存数据库。"""
+
     engine = create_engine(
         "sqlite+pysqlite://",
         connect_args={"check_same_thread": False},
@@ -30,11 +38,14 @@ def db_session() -> Session:
 
 @pytest.fixture()
 def client(db_session: Session) -> TestClient:
+    """覆盖 FastAPI 数据库依赖，让 API 测试使用同一个测试事务上下文。"""
+
     def override_get_db():
+        """将应用的 get_db 绑定到当前测试 Session。"""
+
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
-

@@ -393,7 +393,11 @@ tests/
 - API 测试：使用 FastAPI TestClient/httpx 覆盖核心接口。
 - 集成测试：使用 testcontainers 启动 PostgreSQL + pgvector，验证迁移和检索。
 
-## 12. 主要风险与对策
+## 12. 代码注释规范
+
+项目使用根目录 `AGENTS.md` 作为 Codex 编码指令，使用 `docs/CODE_COMMENT_GUIDELINES.md` 作为团队可读的注释规范。后续新增或修改核心代码时，必须补充解释业务规则、边界条件、外部依赖假设、异常兜底和 LangGraph 状态流转的注释；不得机械地为简单赋值或直观代码逐行注释。
+
+## 13. 主要风险与对策
 
 | 风险 | 影响 | 对策 |
 | --- | --- | --- |
@@ -406,7 +410,7 @@ tests/
 | LangGraph 节点失败难定位 | AI 链路问题排查慢 | 每个节点产出 `agentTrace`，可选开启 LangSmith tracing |
 | 前后端字段不兼容 | Vue 页面无法复用 | API DTO 优先对齐参考项目 |
 
-## 13. 第一轮开发建议
+## 14. 第一轮开发建议
 
 建议按以下顺序开始：
 

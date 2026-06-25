@@ -1,3 +1,9 @@
+"""导入类 API 的阶段 0-2 验收测试。
+
+这些测试覆盖合同创建冲突、审批记录全量替换、制度 upsert 等业务语义；AI/RAG 相关
+行为会在后续阶段单独补充。
+"""
+
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -6,6 +12,8 @@ from app.db.models import ApprovalRecordModel, ClauseChunkModel, ContractModel, 
 
 
 def contract_payload(contract_id: str = "CTR-RAG-001") -> dict:
+    """构造兼容参考项目前端字段命名的合同导入请求。"""
+
     return {
         "id": contract_id,
         "type": "procurement",
@@ -42,6 +50,8 @@ def contract_payload(contract_id: str = "CTR-RAG-001") -> dict:
 
 
 def test_import_contract_success(client: TestClient, db_session: Session) -> None:
+    """合同导入成功后，主表和条款表应在同一数据库中可查。"""
+
     response = client.post("/api/contracts/import", json=contract_payload())
 
     assert response.status_code == 200
@@ -53,6 +63,8 @@ def test_import_contract_success(client: TestClient, db_session: Session) -> Non
 
 
 def test_import_contract_conflict(client: TestClient) -> None:
+    """同一合同 ID 重复导入应返回 409，避免误用为覆盖更新接口。"""
+
     payload = contract_payload()
 
     assert client.post("/api/contracts/import", json=payload).status_code == 200
@@ -66,6 +78,8 @@ def test_import_approval_records_replaces_existing(
     client: TestClient,
     db_session: Session,
 ) -> None:
+    """审批记录导入采用全量替换语义，第二次导入应清掉第一次的旧记录。"""
+
     assert client.post("/api/contracts/import", json=contract_payload()).status_code == 200
 
     first_payload = {
@@ -123,6 +137,8 @@ def test_import_approval_records_replaces_existing(
 
 
 def test_import_approval_records_missing_contract(client: TestClient) -> None:
+    """合同不存在时不能静默创建审批记录，应返回 404。"""
+
     response = client.post("/api/contracts/MISSING/approval-records/import", json={"records": []})
 
     assert response.status_code == 404
@@ -130,6 +146,8 @@ def test_import_approval_records_missing_contract(client: TestClient) -> None:
 
 
 def test_import_policies_upserts_by_policy_id(client: TestClient, db_session: Session) -> None:
+    """制度导入按 policyId 幂等覆盖，支撑调用方安全重试。"""
+
     payload = {
         "policies": [
             {

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4b7ba463-ecb0-49cb-8d3b-ea54bf6d83d6" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/contarct-gent(py).iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/alembic/env.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/alembic/versions/0001_create_business_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/alembic/versions/0001_create_business_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ai/langchain_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/langchain_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/errors.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/errors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/routes/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/routes/contracts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/routes/health.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/routes/health.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/routes/policies.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/routes/policies.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/exceptions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/db/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/db/session.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/session.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/domain/enums.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/enums.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/domain/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/repositories/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/contracts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/repositories/policies.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/policies.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/contracts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/policies.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/policies.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/contract_application.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/contract_application.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/policy_application.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/policy_application.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PROJECT_REQUIREMENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/PROJECT_REQUIREMENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/conftest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_health.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_health.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_import_apis.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_import_apis.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="FastAPI main" />
+        <option value="FastAPI test_main" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 3,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3FcuEVJsxeNc5VL26Rpp3uegj6c" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "master",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.intellij.python.ruff.RuffConfigurable",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="contarct-gent(py)" type="Python.FastAPI">
+      <option name="file" value="$PROJECT_DIR$/main.py" />
+      <module name="contarct-gent(py)" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="4b7ba463-ecb0-49cb-8d3b-ea54bf6d83d6" name="更改" comment="" />
+      <created>1782386567248</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1782386567248</updated>
+      <workItem from="1782386568282" duration="3621000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

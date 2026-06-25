@@ -1,3 +1,9 @@
+"""合同仓储实现。
+
+仓储层只负责业务表读写和 ORM/领域对象转换，不调用模型服务、不处理 Prompt，也不关心
+HTTP 状态码。事务提交由应用服务统一控制。
+"""
+
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 
@@ -7,13 +13,22 @@ from app.domain.models import ApprovalRecord, ClauseChunk, Contract
 
 
 class ContractRepository:
+    """合同、条款和审批记录的数据库访问对象。"""
+
     def __init__(self, db: Session) -> None:
         self.db = db
 
     def exists(self, contract_id: str) -> bool:
+        """判断合同是否存在，用于导入冲突和附属资源 404 校验。"""
+
         return self.db.get(ContractModel, contract_id) is not None
 
     def get(self, contract_id: str) -> Contract | None:
+        """读取合同及条款分块。
+
+        问答和风险检查需要合同事实与条款一起进入上下文，因此这里预加载 chunks。
+        """
+
         stmt = (
             select(ContractModel)
             .options(selectinload(ContractModel.chunks))
@@ -23,6 +38,11 @@ class ContractRepository:
         return self._to_domain(model) if model else None
 
     def add(self, contract: Contract) -> None:
+        """新增合同及其条款分块。
+
+        只 flush 不 commit，让 service 可以把同一用例里的多步写入作为一个事务提交。
+        """
+
         self.db.add(
             ContractModel(
                 id=contract.id,
@@ -63,6 +83,11 @@ class ContractRepository:
         self.db.flush()
 
     def replace_approval_records(self, contract_id: str, records: list[ApprovalRecord]) -> None:
+        """全量替换合同审批记录。
+
+        导入接口表达的是审批历史快照，先删后写能避免调用方重复导入时产生旧记录残留。
+        """
+
         self.db.execute(
             delete(ApprovalRecordModel).where(ApprovalRecordModel.contract_id == contract_id)
         )
@@ -76,6 +101,8 @@ class ContractRepository:
                     decision=record.decision.value,
                     decision_time=record.decision_time,
                     comment_summary=record.comment_summary,
+                    # 这些列表需要原样回传给后续 AI 流程做证据追踪，当前查询需求不高，
+                    # 因此先保存在 JSON 字段而不是拆子表。
                     linked_policy_ids_json=record.linked_policy_ids,
                     linked_clause_chunk_ids_json=record.linked_clause_chunk_ids,
                     risk_items_json=[
@@ -96,10 +123,14 @@ class ContractRepository:
         self.db.flush()
 
     def approval_record_count(self, contract_id: str) -> int:
+        """返回合同审批记录数量，主要用于测试和后续摘要生成前的轻量校验。"""
+
         stmt = select(ApprovalRecordModel).where(ApprovalRecordModel.contract_id == contract_id)
         return len(list(self.db.scalars(stmt)))
 
     def _to_domain(self, model: ContractModel) -> Contract:
+        """将 ORM 模型转换为领域对象，隔离数据库字段命名和枚举存储细节。"""
+
         chunks = [
             ClauseChunk(
                 contract_id=chunk.contract_id,
