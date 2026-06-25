@@ -1,0 +1,34 @@
+# Health
+
+GET http://127.0.0.1:8000/health
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/contracts/import
+Content-Type: application/json
+Accept: application/json
+
+{
+  "id": "CTR-RAG-001",
+  "type": "procurement",
+  "partyAName": "Party A",
+  "partyBName": "Party B",
+  "currency": "CNY",
+  "amountExTax": 500000,
+  "taxRatePct": 13,
+  "amountIncTax": 565000,
+  "signDate": "2026-04-16",
+  "effectiveDate": "2026-04-16",
+  "endDate": "2027-04-15",
+  "riskTier": "MEDIUM",
+  "chunks": [
+    {
+      "id": "c001",
+      "clauseTitle": "Payment Terms",
+      "textForEmbedding": "Party A pays within 30 days after invoice and acceptance."
+    }
+  ]
+}
+
+###
