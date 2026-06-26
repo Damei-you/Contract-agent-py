@@ -2,7 +2,7 @@
 
 本项目是对 `contract-agent-mvp` 的 Python 技术栈重构，目标是构建一个面向财务、法务和业务审批场景的合同审批 Agent MVP。
 
-当前已完成阶段 0-2：项目脚手架、领域模型与数据库表结构、合同/审批记录/制度知识库导入 API。后续阶段会继续接入 LangChain PGVector、双通道 RAG、LangGraph 问答/风险检查/审批辅助工作流。
+当前已完成阶段 0-3：项目脚手架、领域模型与数据库表结构、合同/审批记录/制度知识库导入 API，以及基于 LangChain PGVector 的合同条款/制度知识向量入库。后续阶段会继续实现双通道 RAG、LangGraph 问答/风险检查/审批辅助工作流。
 
 ## 技术栈
 
@@ -10,7 +10,7 @@
 | --- | --- |
 | Web API | FastAPI、Uvicorn |
 | 数据校验 | Pydantic v2 |
-| 配置 | pydantic-settings、`.env` |
+| 配置 | 环境变量、pydantic-settings |
 | ORM | SQLAlchemy 2.x |
 | 迁移 | Alembic |
 | 数据库 | PostgreSQL，测试阶段可用 SQLite |
@@ -25,7 +25,6 @@
 ├── AGENTS.md                         # Codex 编码与注释规则
 ├── README.md                         # 项目说明
 ├── pyproject.toml                    # Python 依赖、测试和 lint 配置
-├── .env.example                      # 本地环境变量示例
 ├── alembic.ini                       # Alembic 配置
 ├── alembic/
 │   ├── env.py                        # Alembic 运行环境
@@ -63,14 +62,15 @@
 │       ├── langchain_factory.py      # LangChain ChatModel/Embeddings 工厂
 │       ├── chains/                   # 后续 LangChain chain 实现位置
 │       ├── graphs/                   # 后续 LangGraph workflow 实现位置
-│       └── rag/                      # 后续 PGVector/RAG 实现位置
+│       └── rag/                      # PGVector 入库、文档映射和后续检索实现
 ├── docs/
 │   ├── PROJECT_REQUIREMENTS.md       # 需求与实施计划
 │   └── CODE_COMMENT_GUIDELINES.md    # 代码注释规范
 ├── tests/
 │   ├── conftest.py                   # 测试数据库和 TestClient fixture
 │   ├── test_health.py                # 健康检查测试
-│   └── test_import_apis.py           # 导入类 API 测试
+│   ├── test_import_apis.py           # 导入类 API 测试
+│   └── test_vector_ingestion.py      # 向量入库编排测试
 ├── main.py                           # 兼容入口，导出 app.main:app
 └── test_main.http                    # 手工接口请求示例
 ```
@@ -96,7 +96,6 @@
 | 导入审批记录 | POST | `/api/contracts/{contract_id}/approval-records/import` |
 | 导入制度知识库 | POST | `/api/policies/import` |
 
-接口示例见 [test_main.http](test_main.http)。
 
 ## 本地启动
 
@@ -115,16 +114,25 @@ python -m venv .venv
 
 ### 2. 配置环境变量
 
-复制 `.env.example` 为 `.env`，按需修改：
+Python 版直接读取环境变量，默认值写在 [app/core/config.py](app/core/config.py) 的 `Settings` 里。常用变量如下：
 
 ```powershell
-Copy-Item .env.example .env
+$env:DATABASE_URL="postgresql+psycopg://postgres:123456@localhost:5432/contract-agent-py"
+$env:OPENAI_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode"
+$env:OPENAI_API_KEY="your_api_key"
+$env:OPENAI_CHAT_MODEL="qwen-plus"
+$env:OPENAI_EMBEDDING_MODEL="text-embedding-v3"
+$env:OPENAI_EMBEDDING_DIMENSIONS="1024"
+$env:EMBEDDING_BATCH_SIZE="10"
+$env:VECTOR_COLLECTION_NAME="contract_agent"
 ```
+
+本地也可以使用 `.env` 文件承载这些变量；`.env` 只放在本机，不提交到 Git。
 
 默认数据库连接为：
 
 ```text
-postgresql+psycopg://postgres:123456@localhost:5432/contract_agent
+postgresql+psycopg://postgres:123456@localhost:5432/contract-agent-py
 ```
 
 ### 3. 执行数据库迁移
@@ -136,13 +144,22 @@ postgresql+psycopg://postgres:123456@localhost:5432/contract_agent
 ### 4. 启动 API
 
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8088
 ```
+
+也可以直接运行入口脚本，端口读取 `APP_PORT`，默认 `8088`：
+
+```powershell
+.\.venv\Scripts\python.exe main.py
+```
+
+如果使用 PyCharm 的 FastAPI/Uvicorn 运行配置，需要在附加参数里写上 `--port 8088`；
+否则 uvicorn 命令行会使用自己的默认端口 `8000`。
 
 启动后访问：
 
-- OpenAPI: `http://127.0.0.1:8000/docs`
-- Health: `http://127.0.0.1:8000/health`
+- OpenAPI: `http://127.0.0.1:8088/docs`
+- Health: `http://127.0.0.1:8088/health`
 
 ## 测试与代码检查
 
@@ -151,7 +168,7 @@ postgresql+psycopg://postgres:123456@localhost:5432/contract_agent
 .\.venv\Scripts\python.exe -m ruff check .
 ```
 
-当前测试使用 SQLite 内存库，主要验证阶段 0-2 的业务 API 和仓储行为。PostgreSQL/pgvector 集成测试会在向量阶段补充。
+当前测试使用 SQLite 内存库验证业务 API 和仓储行为，并使用 fake vector store 验证向量文档映射与 delete + add 幂等写入语义。PostgreSQL/pgvector 需要本地数据库启动后做冒烟验证。
 
 ## 数据库表
 
@@ -162,16 +179,15 @@ postgresql+psycopg://postgres:123456@localhost:5432/contract_agent
 - `approval_records`：合同审批历史。
 - `policy_knowledge`：制度/政策知识库。
 
-后续 `vector_store` 会作为派生检索索引接入，不作为业务事实来源。
+向量索引通过 LangChain PGVector collection 接入，是可重建的派生检索索引，不作为业务事实来源。导入接口会先提交业务表，再同步向量；同步失败时返回 `vectorIngestionWarning`。
 
 ## 后续计划
 
-1. 阶段 3：接入 LangChain PGVector，完成合同条款和制度知识向量入库。
-2. 阶段 4：实现合同通道和制度通道双通道 RAG 检索。
-3. 阶段 5：实现合同问答 LangGraph workflow。
-4. 阶段 6：实现结构化风险检查 LangGraph workflow。
-5. 阶段 7：实现审批辅助 LangGraph workflow。
-6. 阶段 8：联调前端、补充演示数据和 Docker Compose。
+1. 阶段 4：实现合同通道和制度通道双通道 RAG 检索。
+2. 阶段 5：实现合同问答 LangGraph workflow。
+3. 阶段 6：实现结构化风险检查 LangGraph workflow。
+4. 阶段 7：实现审批辅助 LangGraph workflow。
+5. 阶段 8：联调前端、补充演示数据和 Docker Compose。
 
 详细计划见 [docs/PROJECT_REQUIREMENTS.md](docs/PROJECT_REQUIREMENTS.md)。
 
@@ -183,4 +199,3 @@ postgresql+psycopg://postgres:123456@localhost:5432/contract_agent
 - 团队规范：[docs/CODE_COMMENT_GUIDELINES.md](docs/CODE_COMMENT_GUIDELINES.md)
 
 注释重点解释业务规则、边界条件、事务语义、外部依赖假设、异常兜底和 LangGraph 状态流转，不机械逐行注释。
-

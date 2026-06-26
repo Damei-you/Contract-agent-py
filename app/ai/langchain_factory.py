@@ -10,6 +10,20 @@ from typing import Any
 from app.core.config import Settings
 
 
+def resolve_openai_compatible_base_url(base_url: str) -> str:
+    """把参考项目配置转换为 Python OpenAI SDK 需要的 endpoint。
+
+    Spring AI 配置里使用 `https://dashscope.aliyuncs.com/compatible-mode`；
+    Python OpenAI/LangChain 客户端会直接在 base_url 后拼 `/embeddings`、
+    `/chat/completions`，因此 DashScope 兼容模式需要补上 `/v1`。
+    """
+
+    normalized = base_url.rstrip("/")
+    if normalized.endswith("/compatible-mode"):
+        return f"{normalized}/v1"
+    return normalized
+
+
 def configure_langsmith(settings: Settings) -> None:
     """按配置开启 LangSmith tracing。
 
@@ -35,7 +49,7 @@ def create_chat_model(settings: Settings) -> Any:
     return ChatOpenAI(
         model=settings.openai_chat_model,
         api_key=settings.openai_api_key or None,
-        base_url=settings.openai_base_url,
+        base_url=resolve_openai_compatible_base_url(settings.openai_base_url),
         temperature=0.2,
     )
 
@@ -51,6 +65,12 @@ def create_embeddings(settings: Settings) -> Any:
 
     return OpenAIEmbeddings(
         model=settings.openai_embedding_model,
+        dimensions=settings.openai_embedding_dimensions,
         api_key=settings.openai_api_key or None,
-        base_url=settings.openai_base_url,
+        base_url=resolve_openai_compatible_base_url(settings.openai_base_url),
+        chunk_size=settings.embedding_batch_size,
+        # DashScope OpenAI-compatible embedding 接口要求 input.contents 是 str/list[str]；
+        # LangChain 默认 tiktoken 预处理可能传 token id，导致上游 400 InvalidParameter。
+        tiktoken_enabled=False,
+        check_embedding_ctx_length=False,
     )

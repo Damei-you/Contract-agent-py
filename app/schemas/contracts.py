@@ -75,9 +75,14 @@ class ImportContractRequest(ApiModel):
 
 
 class ImportContractResponse(ApiModel):
-    """合同导入响应，只返回稳定合同 ID，便于前端跳转后续页面。"""
+    """合同导入响应。
+
+    vector_ingestion_warning 表示业务表已成功提交，但派生向量索引未同步成功，可用同一
+    请求重试导入或后续补偿任务重建。
+    """
 
     contract_id: str
+    vector_ingestion_warning: str | None = None
 
 
 class RiskItemDto(ApiModel):

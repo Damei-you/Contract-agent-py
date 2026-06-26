@@ -6,6 +6,7 @@
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.ai.rag.ingestion import PolicyVectorIngestionService
 from app.core.exceptions import ServiceUnavailableError
 from app.domain.models import PolicyKnowledgeItem
 from app.repositories.policies import PolicyKnowledgeRepository
@@ -15,9 +16,15 @@ from app.schemas.policies import ImportPolicyKnowledgeRequest, ImportPolicyKnowl
 class PolicyKnowledgeApplicationService:
     """制度知识库导入用例编排入口。"""
 
-    def __init__(self, db: Session, policy_repository: PolicyKnowledgeRepository) -> None:
+    def __init__(
+        self,
+        db: Session,
+        policy_repository: PolicyKnowledgeRepository,
+        vector_ingestion: PolicyVectorIngestionService | None = None,
+    ) -> None:
         self.db = db
         self.policy_repository = policy_repository
+        self.vector_ingestion = vector_ingestion
 
     def import_policies(
         self,
@@ -53,7 +60,28 @@ class PolicyKnowledgeApplicationService:
         except SQLAlchemyError as exc:
             self.db.rollback()
             raise ServiceUnavailableError(f"Database write failed: {exc}") from exc
+        vector_warning = self._sync_policy_vectors(items)
         return ImportPolicyKnowledgeResponse(
             imported_count=len(items),
             policy_ids=[item.policy_id for item in items],
+            vector_ingestion_warning=vector_warning,
         )
+
+    def _sync_policy_vectors(self, items: list[PolicyKnowledgeItem]) -> str | None:
+        """同步制度知识向量索引。
+
+        制度业务表已经提交后才执行向量写入；失败时返回 warning，调用方可安全重试导入。
+        """
+
+        if not items:
+            return None
+        if self.vector_ingestion is None:
+            return "Vector ingestion skipped: OPENAI_API_KEY is not configured."
+        try:
+            self.vector_ingestion.ingest(items)
+        except Exception as exc:  # noqa: BLE001
+            return (
+                f"Vector store sync failed: {exc}. "
+                "Business table updated; retry import to re-sync."
+            )
+        return None

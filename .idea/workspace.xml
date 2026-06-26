@@ -4,37 +4,28 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4b7ba463-ecb0-49cb-8d3b-ea54bf6d83d6" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/contarct-gent(py).iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/alembic/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/alembic/env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/alembic/versions/0001_create_business_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/alembic/versions/0001_create_business_tables.py" afterDir="false" />
+    <list default="true" id="4b7ba463-ecb0-49cb-8d3b-ea54bf6d83d6" name="更改" comment="添加注释,添加README文件">
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/ai/langchain_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/langchain_factory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/errors.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/errors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ai/rag/document_mapping.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/rag/document_mapping.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ai/rag/ingestion.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/rag/ingestion.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ai/rag/vector_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/rag/vector_store.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/routes/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/routes/contracts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/routes/health.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/routes/health.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/routes/policies.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/routes/policies.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/exceptions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/db/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/session.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/session.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/domain/enums.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/enums.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/domain/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/domain/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/repositories/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/contracts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/repositories/policies.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/policies.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/contracts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/policies.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/policies.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/services/contract_application.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/contract_application.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/services/policy_application.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/policy_application.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/PROJECT_REQUIREMENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/PROJECT_REQUIREMENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/conftest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_health.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_health.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_import_apis.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_import_apis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_health.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_import_apis.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,10 +43,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 3,
-  "fromUser": false
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="3FcuEVJsxeNc5VL26Rpp3uegj6c" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
@@ -66,8 +57,11 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "FastAPI.contarct-gent(py).executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
@@ -79,6 +73,11 @@
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "com.intellij.python.ruff.RuffConfigurable",
     "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ]
   }
 }]]></component>
   <component name="RunManager">
@@ -114,11 +113,30 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1782386567248</updated>
-      <workItem from="1782386568282" duration="3621000" />
+      <workItem from="1782386568282" duration="8682000" />
+      <workItem from="1782432346789" duration="7914000" />
+      <workItem from="1782460700037" duration="13309000" />
     </task>
+    <task id="LOCAL-00001" summary="添加注释,添加README文件">
+      <option name="closed" value="true" />
+      <created>1782395572149</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1782395572149</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="添加注释,添加README文件" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加注释,添加README文件" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/contarct_gent_py_$main.coverage" NAME="main 覆盖结果" MODIFIED="1782462048358" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/contarct_gent_py_$contarct_gent_py_.coverage" NAME="contarct-gent(py) 覆盖结果" MODIFIED="1782477124126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>

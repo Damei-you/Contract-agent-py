@@ -9,6 +9,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.ai.rag.ingestion import ContractVectorIngestionService
+from app.ai.rag.vector_store import build_contract_vector_ingestion_service
 from app.db.session import get_db
 from app.repositories.contracts import ContractRepository
 from app.schemas.contracts import (
@@ -24,31 +26,52 @@ router = APIRouter(prefix="/api/contracts", tags=["contracts"])
 DbSession = Annotated[Session, Depends(get_db)]
 
 
-def get_contract_service(db: DbSession) -> ContractApplicationService:
+def get_contract_vector_ingestion_service() -> ContractVectorIngestionService | None:
+    """创建合同条款向量入库服务。
+
+    缺少模型配置时返回 None，由应用服务把向量同步降级为 warning，不影响业务表导入。
+    """
+
+    return build_contract_vector_ingestion_service()
+
+
+ContractVectorIngestion = Annotated[
+    ContractVectorIngestionService | None,
+    Depends(get_contract_vector_ingestion_service),
+]
+
+
+def get_contract_service(
+    db: DbSession,
+    vector_ingestion: ContractVectorIngestion,
+) -> ContractApplicationService:
     """为单次请求创建应用服务。
 
     repository 与 Session 共享同一个事务边界，由 service 决定 commit/rollback。
     """
 
-    return ContractApplicationService(db=db, contract_repository=ContractRepository(db))
+    return ContractApplicationService(
+        db=db,
+        contract_repository=ContractRepository(db),
+        vector_ingestion=vector_ingestion,
+    )
 
 
 ContractService = Annotated[ContractApplicationService, Depends(get_contract_service)]
 
 
-@router.post("/import", response_model=ImportContractResponse)
+@router.post("/import", response_model=ImportContractResponse, response_model_exclude_none=True)
 def import_contract(
     request: ImportContractRequest,
     service: ContractService,
 ) -> ImportContractResponse:
     """导入合同主数据和条款分块。
 
-    该接口当前语义是“创建”，同一合同 ID 重复提交返回 409；后续向量入库会作为
-    派生索引流程接到 service 层之后。
+    该接口语义是“导入快照”，同一合同 ID 重复提交会先删除旧事实再写入本次内容；
+    向量入库作为派生索引流程接在业务表提交之后。
     """
 
     return service.import_contract(request)
-
 
 @router.post("/{contract_id}/approval-records/import", response_model=ImportApprovalRecordsResponse)
 def import_approval_records(

@@ -1,6 +1,6 @@
 """SQLAlchemy 业务表模型。
 
-这些表保存可重启恢复的权威业务数据；pgvector/vector_store 在后续阶段只作为派生索引，
+这些表保存可重启恢复的权威业务数据；LangChain PGVector 表只作为派生索引，
 不能反向作为合同或制度事实来源。
 """
 

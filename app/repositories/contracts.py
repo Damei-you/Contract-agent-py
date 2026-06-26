@@ -19,7 +19,7 @@ class ContractRepository:
         self.db = db
 
     def exists(self, contract_id: str) -> bool:
-        """判断合同是否存在，用于导入冲突和附属资源 404 校验。"""
+        """判断合同是否存在，用于附属资源 404 校验。"""
 
         return self.db.get(ContractModel, contract_id) is not None
 
@@ -81,6 +81,20 @@ class ContractRepository:
                 )
             )
         self.db.flush()
+
+    def replace_contract(self, contract: Contract) -> None:
+        """按合同 ID 全量覆盖合同快照。
+
+        合同导入对接的是外部系统快照，重复导入同一 ID 时以本次请求为准；显式删除
+        审批记录和条款后再删合同，避免依赖不同数据库对级联删除的实现差异。
+        """
+
+        self.db.execute(
+            delete(ApprovalRecordModel).where(ApprovalRecordModel.contract_id == contract.id)
+        )
+        self.db.execute(delete(ClauseChunkModel).where(ClauseChunkModel.contract_id == contract.id))
+        self.db.execute(delete(ContractModel).where(ContractModel.id == contract.id))
+        self.add(contract)
 
     def replace_approval_records(self, contract_id: str, records: list[ApprovalRecord]) -> None:
         """全量替换合同审批记录。

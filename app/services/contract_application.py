@@ -7,7 +7,8 @@
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import ConflictError, NotFoundError, ServiceUnavailableError
+from app.ai.rag.ingestion import ContractVectorIngestionService
+from app.core.exceptions import NotFoundError, ServiceUnavailableError
 from app.domain.models import ApprovalRecord, ClauseChunk, Contract, RiskItem
 from app.repositories.contracts import ContractRepository
 from app.schemas.contracts import (
@@ -24,21 +25,25 @@ class ContractApplicationService:
     该类不直接依赖 FastAPI，便于在测试、CLI 或未来异步任务中复用同一套业务逻辑。
     """
 
-    def __init__(self, db: Session, contract_repository: ContractRepository) -> None:
+    def __init__(
+        self,
+        db: Session,
+        contract_repository: ContractRepository,
+        vector_ingestion: ContractVectorIngestionService | None = None,
+    ) -> None:
         self.db = db
         self.contract_repository = contract_repository
+        self.vector_ingestion = vector_ingestion
 
     def import_contract(self, request: ImportContractRequest) -> ImportContractResponse:
-        """创建合同和条款分块。
+        """导入合同和条款分块。
 
-        同一合同 ID 重复导入会返回 409，避免调用方误以为该接口具备覆盖更新语义。
+        同一合同 ID 重复导入采用先删后插的快照覆盖语义，和参考项目导入流程保持一致。
         """
-
-        if self.contract_repository.exists(request.id):
-            raise ConflictError(f"Contract already exists: {request.id}")
 
         # DTO 字段保持参考项目 API 命名，领域对象使用 Python 内部命名；
         # 映射集中在 service 层，避免仓储层感知 HTTP 请求结构。
+        old_contract = self.contract_repository.get(request.id)
         contract = Contract(
             id=request.id,
             contract_type=request.contract_type,
@@ -75,14 +80,19 @@ class ContractApplicationService:
             ],
         )
         try:
-            # 合同主数据和条款分块必须同事务提交，否则后续 RAG 会出现“有合同无条款”
-            # 或“有条款无合同”的不一致业务状态。
-            self.contract_repository.add(contract)
+            # 这里按导入快照覆盖：旧审批记录、旧条款和旧合同必须在同一事务内清理，
+            # 再写入新合同快照，否则重复导入会残留过期事实。
+            self.contract_repository.replace_contract(contract)
             self.db.commit()
         except SQLAlchemyError as exc:
             self.db.rollback()
             raise ServiceUnavailableError(f"Database write failed: {exc}") from exc
-        return ImportContractResponse(contract_id=contract.id)
+
+        vector_warning = self._sync_contract_vectors(contract, old_contract)
+        return ImportContractResponse(
+            contract_id=contract.id,
+            vector_ingestion_warning=vector_warning,
+        )
 
     def import_approval_records(
         self,
@@ -134,3 +144,30 @@ class ContractApplicationService:
             self.db.rollback()
             raise ServiceUnavailableError(f"Database write failed: {exc}") from exc
         return ImportApprovalRecordsResponse(contract_id=contract_id, imported_count=len(records))
+
+    def _sync_contract_vectors(
+        self,
+        contract: Contract,
+        old_contract: Contract | None = None,
+    ) -> str | None:
+        """同步合同条款向量索引。
+
+        向量库是派生索引，失败时只返回 warning；业务表已经提交，不应再回滚。
+        """
+
+        old_chunks = old_contract.chunks if old_contract else []
+        if not contract.chunks and not old_chunks:
+            return None
+        if self.vector_ingestion is None:
+            return "Vector ingestion skipped: OPENAI_API_KEY is not configured."
+        try:
+            if old_chunks:
+                self.vector_ingestion.replace(old_chunks, contract.chunks)
+            else:
+                self.vector_ingestion.ingest(contract.chunks)
+        except Exception as exc:  # noqa: BLE001
+            return (
+                f"Vector store sync failed: {exc}. "
+                "Business table updated; retry import to re-sync."
+            )
+        return None

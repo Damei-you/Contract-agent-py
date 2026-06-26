@@ -102,7 +102,7 @@ MVP 阶段保留参考项目的核心接口路径：
 - `clause_chunks`：合同条款分块。
 - `approval_records`：合同审批记录。
 - `policy_knowledge`：制度/政策知识库。
-- `vector_store`：pgvector 派生检索索引。
+- `langchain_pg_embedding` / `langchain_pg_collection`：LangChain PGVector 派生检索索引。
 
 关键约束：
 
@@ -110,7 +110,7 @@ MVP 阶段保留参考项目的核心接口路径：
 - `clause_chunks` 使用 `(contract_id, chunk_id)` 作为联合主键。
 - `approval_records` 使用 `(contract_id, approval_record_id)` 作为联合主键。
 - `policy_knowledge.policy_id` 是制度条目的稳定主键，被风险项和审批记录引用后不应随意修改。
-- 业务表是事实来源，`vector_store` 只作为可重建的检索索引。
+- 业务表是事实来源，LangChain PGVector 表只作为可重建的检索索引。
 
 ## 7. RAG 与向量映射
 
@@ -239,7 +239,7 @@ tests/
 - 创建 `pyproject.toml`，引入 FastAPI、Pydantic、SQLAlchemy、Alembic、LangChain、LangGraph、`langchain-openai`、`langchain-postgres`、pytest、ruff。
 - 建立 `app/` 分层目录。
 - 增加 `/health` 接口。
-- 增加 `.env.example` 和基础配置读取。
+- 增加基础配置读取，运行时直接使用系统环境变量或本地 `.env` 文件。
 - 建立 `langchain_factory.py`，统一创建 ChatModel、Embeddings 和可选 LangSmith tracing 配置。
 - 建立最小单元测试和 lint 命令。
 
@@ -276,7 +276,7 @@ tests/
 验收标准：
 
 - 合同导入成功后业务表可查。
-- 重复导入合同返回 `409`。
+- 重复导入合同采用先删后插的快照覆盖语义。
 - 审批记录导入为全量替换。
 - 制度导入按 `policyId` 幂等覆盖。
 
@@ -402,7 +402,7 @@ tests/
 | 风险 | 影响 | 对策 |
 | --- | --- | --- |
 | OpenAI-compatible 服务差异 | chat/embedding 参数不完全一致 | LLM client 独立封装，配置模型和维度 |
-| embedding 维度不匹配 | pgvector 写入失败 | 启动时校验 `OPENAI_EMBEDDING_DIMENSIONS` 与表结构 |
+| embedding 维度不匹配 | pgvector 写入失败 | 启动时校验 `OPENAI_EMBEDDING_DIMENSIONS` 与 LangChain PGVector 表结构 |
 | LangChain/LangGraph 版本演进 | API 或包拆分变化导致升级成本 | 在 `pyproject.toml` 锁定主要版本范围，LangChain 相关能力集中封装在 `ai/` 模块 |
 | LLM JSON 输出不稳定 | 风险检查解析失败 | 使用 LangChain structured output/Pydantic parser + 严格 prompt + 兜底逻辑 |
 | 向量写入与业务写入不一致 | 检索结果缺失或过期 | 业务表作为权威，向量表可重建，导入接口返回 warning |
