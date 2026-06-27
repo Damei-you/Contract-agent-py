@@ -4,6 +4,7 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+.idea/
 
 # Local test files generated during iterative development.
 tests/
