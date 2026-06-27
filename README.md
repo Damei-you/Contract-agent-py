@@ -2,7 +2,7 @@
 
 本项目是对 `contract-agent-mvp` 的 Python 技术栈重构，目标是构建一个面向财务、法务和业务审批场景的合同审批 Agent MVP。
 
-当前已完成阶段 0-5：项目脚手架、领域模型与数据库表结构、合同/审批记录/制度知识库导入 API、基于 LangChain PGVector 的合同条款/制度知识向量入库、合同/制度双通道 RAG 检索，以及合同问答 LangGraph workflow。后续阶段会继续实现风险检查和审批辅助工作流。
+当前已完成阶段 0-6：项目脚手架、领域模型与数据库表结构、合同/审批记录/制度知识库导入 API、基于 LangChain PGVector 的合同条款/制度知识向量入库、合同/制度双通道 RAG 检索、合同问答 LangGraph workflow，以及结构化风险检查 LangGraph workflow。后续阶段会继续实现审批辅助工作流。
 
 ## 技术栈
 
@@ -58,6 +58,7 @@
 │   ├── services/
 │   │   ├── contract_application.py   # 合同应用服务
 │   │   ├── contract_qa.py            # 合同问答应用服务
+│   │   ├── contract_risk_check.py    # 合同风险检查应用服务
 │   │   └── policy_application.py     # 制度知识库应用服务
 │   └── ai/
 │       ├── langchain_factory.py      # LangChain ChatModel/Embeddings 工厂
@@ -74,6 +75,8 @@
 ├── tests/
 │   ├── test_contract_qa_api.py       # 合同问答 API 测试
 │   ├── test_contract_qa_workflow.py  # 合同问答 LangGraph 测试
+│   ├── test_risk_check_api.py        # 风险检查 API 测试
+│   ├── test_risk_check_workflow.py   # 风险检查 LangGraph 测试
 │   └── test_rag_retrievers.py        # 双通道 RAG 检索测试
 ├── main.py                           # 本地启动入口
 └── test_main.http                    # 手工接口请求示例
@@ -87,7 +90,7 @@
 - `domain`：保存与框架无关的业务对象和值解析。
 - `schemas`：定义 API 请求/响应 DTO，对外兼容 camelCase 字段。
 - `db`：保存 ORM 模型和数据库 Session 管理。
-- `ai`：封装 LangChain/LangGraph/RAG 相关能力，当前已具备向量入库、双通道检索和合同问答 workflow。
+- `ai`：封装 LangChain/LangGraph/RAG 相关能力，当前已具备向量入库、双通道检索、合同问答和结构化风险检查 workflow。
 - `alembic`：管理数据库 schema 迁移。
 - `tests`：覆盖当前阶段的健康检查、合同导入、审批记录导入和制度导入。
 
@@ -98,6 +101,7 @@
 | 健康检查 | GET | `/health` |
 | 导入合同 | POST | `/api/contracts/import` |
 | 合同问答 | POST | `/api/contracts/{contract_id}/qa` |
+| 风险检查 | POST | `/api/contracts/{contract_id}/risk-check` |
 | 导入审批记录 | POST | `/api/contracts/{contract_id}/approval-records/import` |
 | 导入制度知识库 | POST | `/api/policies/import` |
 
@@ -173,7 +177,7 @@ postgresql+psycopg://postgres:123456@localhost:5432/contract-agent-py
 .\.venv\Scripts\python.exe -m ruff check .
 ```
 
-当前测试使用 fake vector store 验证双通道 RAG 的 metadata filter、合同类型二次过滤和 LangChain Runnable 接口，并使用 fake workflow/model 验证合同问答 LangGraph 状态流转和 API 响应契约。PostgreSQL/pgvector 与真实 embedding/chat model 需要本地数据库和模型服务启动后做端到端验收。
+当前测试使用 fake vector store 验证双通道 RAG 的 metadata filter、合同类型二次过滤和 LangChain Runnable 接口，并使用 fake workflow/model 验证合同问答、风险检查 LangGraph 状态流转和 API 响应契约。PostgreSQL/pgvector 与真实 embedding/chat model 需要本地数据库和模型服务启动后做端到端验收。
 
 ## 数据库表
 
@@ -188,9 +192,8 @@ postgresql+psycopg://postgres:123456@localhost:5432/contract-agent-py
 
 ## 后续计划
 
-1. 阶段 6：实现结构化风险检查 LangGraph workflow。
-2. 阶段 7：实现审批辅助 LangGraph workflow。
-3. 阶段 8：联调前端、补充演示数据和 Docker Compose。
+1. 阶段 7：实现审批辅助 LangGraph workflow。
+2. 阶段 8：联调前端、补充演示数据和 Docker Compose。
 
 详细计划见 [docs/PROJECT_REQUIREMENTS.md](docs/PROJECT_REQUIREMENTS.md)。
 

@@ -8,8 +8,8 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.models import ApprovalRecordModel, ClauseChunkModel, ContractModel
-from app.domain.enums import ContractType, RiskSeverity
-from app.domain.models import ApprovalRecord, ClauseChunk, Contract
+from app.domain.enums import ApprovalDecision, ContractType, RiskSeverity
+from app.domain.models import ApprovalRecord, ClauseChunk, Contract, RiskItem
 
 
 class ContractRepository:
@@ -142,6 +142,20 @@ class ContractRepository:
         stmt = select(ApprovalRecordModel).where(ApprovalRecordModel.contract_id == contract_id)
         return len(list(self.db.scalars(stmt)))
 
+    def list_approval_records(self, contract_id: str) -> list[ApprovalRecord]:
+        """按审批步骤读取合同审批历史。
+
+        风险检查 Prompt 只需要稳定顺序的历史摘要；排序规则对齐参考项目
+        ApprovalRecordMapper.xml 的 `ORDER BY step_no, approval_record_id`。
+        """
+
+        stmt = (
+            select(ApprovalRecordModel)
+            .where(ApprovalRecordModel.contract_id == contract_id)
+            .order_by(ApprovalRecordModel.step_no, ApprovalRecordModel.approval_record_id)
+        )
+        return [self._approval_record_to_domain(model) for model in self.db.scalars(stmt)]
+
     def _to_domain(self, model: ContractModel) -> Contract:
         """将 ORM 模型转换为领域对象，隔离数据库字段命名和枚举存储细节。"""
 
@@ -180,4 +194,40 @@ class ContractRepository:
             vector_doc_id=model.vector_doc_id,
             notes=model.notes,
             chunks=chunks,
+        )
+
+    def _approval_record_to_domain(self, model: ApprovalRecordModel) -> ApprovalRecord:
+        """将审批 ORM 模型转换为领域对象，保留 JSON 字段中的证据引用。"""
+
+        return ApprovalRecord(
+            contract_id=model.contract_id,
+            approval_record_id=model.approval_record_id,
+            step_no=model.step_no,
+            approver_role=model.approver_role,
+            decision=ApprovalDecision.from_flexible(model.decision),
+            decision_time=model.decision_time,
+            comment_summary=model.comment_summary,
+            linked_policy_ids=list(model.linked_policy_ids_json or []),
+            linked_clause_chunk_ids=list(model.linked_clause_chunk_ids_json or []),
+            risk_items=[
+                self._risk_item_from_json(item) for item in (model.risk_items_json or [])
+            ],
+            vector_doc_id=model.vector_doc_id,
+        )
+
+    def _risk_item_from_json(self, item: dict) -> RiskItem:
+        """从审批记录 JSON 还原风险项。
+
+        历史数据可能来自 Java camelCase DTO，这里只在仓储边界做字段名兼容，避免 AI workflow
+        关心数据库 JSON 的命名细节。
+        """
+
+        return RiskItem(
+            code=str(item.get("code") or "UNKNOWN"),
+            severity=RiskSeverity.from_flexible(item.get("severity") or RiskSeverity.MEDIUM),
+            detail=str(item.get("detail") or ""),
+            related_clause_chunk_ids=list(item.get("relatedClauseChunkIds") or []),
+            related_policy_ids=list(item.get("relatedPolicyIds") or []),
+            required_evidence=list(item.get("requiredEvidence") or []),
+            escalation_role=str(item.get("escalationRole") or ""),
         )

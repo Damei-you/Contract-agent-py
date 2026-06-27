@@ -14,6 +14,13 @@ from app.ai.graphs.contract_qa_graph import (
     EmptyPolicyContextRetriever,
     build_contract_qa_workflow,
 )
+from app.ai.graphs.risk_check_graph import (
+    EmptyContractContextRetriever as RiskEmptyContractContextRetriever,
+)
+from app.ai.graphs.risk_check_graph import (
+    EmptyPolicyContextRetriever as RiskEmptyPolicyContextRetriever,
+)
+from app.ai.graphs.risk_check_graph import build_risk_check_workflow
 from app.ai.langchain_factory import create_chat_model
 from app.ai.rag.ingestion import ContractVectorIngestionService
 from app.ai.rag.vector_store import (
@@ -28,6 +35,7 @@ from app.repositories.contracts import ContractRepository
 from app.schemas.contracts import (
     ContractQaRequest,
     ContractQaResponse,
+    ContractRiskCheckResponse,
     ImportApprovalRecordsRequest,
     ImportApprovalRecordsResponse,
     ImportContractRequest,
@@ -35,6 +43,7 @@ from app.schemas.contracts import (
 )
 from app.services.contract_application import ContractApplicationService
 from app.services.contract_qa import ContractQaApplicationService
+from app.services.contract_risk_check import ContractRiskCheckApplicationService
 
 router = APIRouter(prefix="/api/contracts", tags=["contracts"])
 
@@ -99,6 +108,33 @@ def get_contract_qa_service(db: DbSession) -> ContractQaApplicationService:
 ContractQaService = Annotated[ContractQaApplicationService, Depends(get_contract_qa_service)]
 
 
+def get_contract_risk_check_service(db: DbSession) -> ContractRiskCheckApplicationService:
+    """创建合同风险检查应用服务。
+
+    风险检查依赖 ChatModel；RAG retriever 按参考项目软依赖处理，缺失时使用空上下文。
+    """
+
+    settings = get_settings()
+    if not settings.openai_api_key:
+        raise ServiceUnavailableError("Contract risk check requires OPENAI_API_KEY.")
+    contract_retriever = build_contract_rag_retriever(settings)
+    policy_retriever = build_policy_rag_retriever(settings)
+
+    workflow = build_risk_check_workflow(
+        contract_repository=ContractRepository(db),
+        contract_retriever=contract_retriever or RiskEmptyContractContextRetriever(),
+        policy_retriever=policy_retriever or RiskEmptyPolicyContextRetriever(),
+        chat_model=create_chat_model(settings),
+    )
+    return ContractRiskCheckApplicationService(workflow)
+
+
+ContractRiskCheckService = Annotated[
+    ContractRiskCheckApplicationService,
+    Depends(get_contract_risk_check_service),
+]
+
+
 @router.post("/import", response_model=ImportContractResponse, response_model_exclude_none=True)
 def import_contract(
     request: ImportContractRequest,
@@ -125,6 +161,19 @@ def answer_contract_question(
     """
 
     return service.answer_question(contract_id, request)
+
+
+@router.post("/{contract_id}/risk-check", response_model=ContractRiskCheckResponse)
+def check_contract_risk(
+    contract_id: str,
+    service: ContractRiskCheckService,
+) -> ContractRiskCheckResponse:
+    """对指定合同执行结构化风险检查。
+
+    该接口是读模型能力，不修改业务表；合同不存在返回 404，缺少模型配置时返回 503。
+    """
+
+    return service.check_risk(contract_id)
 
 
 @router.post("/{contract_id}/approval-records/import", response_model=ImportApprovalRecordsResponse)

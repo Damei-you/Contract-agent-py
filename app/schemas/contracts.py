@@ -106,7 +106,10 @@ class ContractQaResponse(ApiModel):
 
 
 class RiskItemDto(ApiModel):
-    """审批记录中携带的结构化风险项 DTO。"""
+    """结构化风险项 DTO。
+
+    该结构同时用于审批历史导入和风险检查响应，字段对齐 contract-agent-mvp RiskItem。
+    """
 
     code: str
     severity: RiskSeverity
@@ -157,3 +160,22 @@ class ImportApprovalRecordsResponse(ApiModel):
 
     contract_id: str
     imported_count: int
+
+
+class AgentTraceDto(ApiModel):
+    """风险检查/审批辅助返回的轻量 Agent 执行轨迹。"""
+
+    agent_name: str
+    summary: str
+
+
+class ContractRiskCheckResponse(ApiModel):
+    """结构化风险检查响应。
+
+    对齐 contract-agent-mvp ContractRiskCheckResponse：解析失败时 summary 可为模型原文，
+    risk_items 为空；agent_trace 描述本轮合同事实、制度依据和风险审查节点产出。
+    """
+
+    summary: str = ""
+    risk_items: list[RiskItemDto] = Field(default_factory=list)
+    agent_trace: list[AgentTraceDto] = Field(default_factory=list)
