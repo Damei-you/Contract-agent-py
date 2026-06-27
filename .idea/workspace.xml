@@ -4,14 +4,13 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4b7ba463-ecb0-49cb-8d3b-ea54bf6d83d6" name="更改" comment="合同问答功能完成">
+    <list default="true" id="4b7ba463-ecb0-49cb-8d3b-ea54bf6d83d6" name="更改" comment="分险审查功能完成">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/ai/chains/risk_check.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/chains/risk_check.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/ai/graphs/risk_check_graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/graphs/risk_check_graph.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ai/chains/approval_assist.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/chains/approval_assist.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ai/graphs/approval_assist_graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/graphs/approval_assist_graph.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/ai/graphs/state.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ai/graphs/state.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/routes/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/routes/contracts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/repositories/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/contracts.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/contracts.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -103,7 +102,7 @@
       <workItem from="1782386568282" duration="8682000" />
       <workItem from="1782432346789" duration="7914000" />
       <workItem from="1782460700037" duration="17825000" />
-      <workItem from="1782522904458" duration="4592000" />
+      <workItem from="1782522904458" duration="6886000" />
     </task>
     <task id="LOCAL-00001" summary="添加注释,添加README文件">
       <option name="closed" value="true" />
@@ -129,7 +128,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782527918435</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="分险审查功能完成">
+      <option name="closed" value="true" />
+      <created>1782530137946</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1782530137946</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -150,7 +157,8 @@
     <MESSAGE value="添加注释,添加README文件" />
     <MESSAGE value="完成合同导入/向量嵌入/审批记录导入功能" />
     <MESSAGE value="合同问答功能完成" />
-    <option name="LAST_COMMIT_MESSAGE" value="合同问答功能完成" />
+    <MESSAGE value="分险审查功能完成" />
+    <option name="LAST_COMMIT_MESSAGE" value="分险审查功能完成" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/contarct_gent_py_$main.coverage" NAME="main 覆盖结果" MODIFIED="1782462048358" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

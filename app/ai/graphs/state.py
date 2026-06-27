@@ -62,3 +62,30 @@ class RiskCheckState(TypedDict, total=False):
     risk_items: list[RiskItem]
     agent_trace: list[AgentTraceState]
     response: dict[str, Any]
+
+
+class ApprovalAssistState(TypedDict, total=False):
+    """审批辅助图状态。
+
+    contract_id/approver_role/focus/query 由 workflow 入口写入；contract 由 load_contract 写入；
+    contract_context/policy_context 由 retrieve_role_related_context 写入并供生成建议与回填命中 ID；
+    approval_history 由 load_approval_history 写入；raw_advice_output 由 generate_advice 写入；
+    suggestion/checklist 由同节点解析后写入；agent_trace 在合同事实、制度依据和审批建议节点后
+    追加，response 由 format_response 写入并由 service 映射为 HTTP DTO。
+    """
+
+    contract_id: str
+    approver_role: str
+    focus: str
+    query: str
+    contract: Contract
+    contract_context: list[RagRetrievedDocument]
+    policy_context: list[RagRetrievedDocument]
+    approval_history: str
+    raw_advice_output: str
+    suggestion: str
+    checklist: list[str]
+    retrieved_chunk_ids: list[str]
+    retrieved_policy_ids: list[str]
+    agent_trace: list[AgentTraceState]
+    response: dict[str, Any]

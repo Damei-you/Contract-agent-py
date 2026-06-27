@@ -1,7 +1,7 @@
 """合同相关 HTTP 路由。
 
-当前阶段只实现导入类接口：合同导入和审批记录导入。问答、风险检查、审批辅助
-会在 LangGraph 工作流阶段接入，但 URL 设计保持与参考项目兼容。
+当前包含合同导入、审批记录导入，以及问答、风险检查、审批辅助三个 LangGraph 能力接口；
+URL 设计保持与参考项目兼容。
 """
 
 from typing import Annotated
@@ -9,6 +9,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.ai.graphs.approval_assist_graph import (
+    EmptyContractContextRetriever as ApprovalEmptyContractContextRetriever,
+)
+from app.ai.graphs.approval_assist_graph import (
+    EmptyPolicyContextRetriever as ApprovalEmptyPolicyContextRetriever,
+)
+from app.ai.graphs.approval_assist_graph import build_approval_assist_workflow
 from app.ai.graphs.contract_qa_graph import (
     EmptyContractContextRetriever,
     EmptyPolicyContextRetriever,
@@ -33,6 +40,8 @@ from app.core.exceptions import ServiceUnavailableError
 from app.db.session import get_db
 from app.repositories.contracts import ContractRepository
 from app.schemas.contracts import (
+    ApprovalAssistRequest,
+    ApprovalAssistResponse,
     ContractQaRequest,
     ContractQaResponse,
     ContractRiskCheckResponse,
@@ -42,6 +51,7 @@ from app.schemas.contracts import (
     ImportContractResponse,
 )
 from app.services.contract_application import ContractApplicationService
+from app.services.contract_approval_assist import ContractApprovalAssistApplicationService
 from app.services.contract_qa import ContractQaApplicationService
 from app.services.contract_risk_check import ContractRiskCheckApplicationService
 
@@ -135,6 +145,33 @@ ContractRiskCheckService = Annotated[
 ]
 
 
+def get_contract_approval_assist_service(db: DbSession) -> ContractApprovalAssistApplicationService:
+    """创建合同审批辅助应用服务。
+
+    审批辅助依赖 ChatModel；RAG retriever 按参考项目软依赖处理，缺失时使用空上下文。
+    """
+
+    settings = get_settings()
+    if not settings.openai_api_key:
+        raise ServiceUnavailableError("Contract approval assist requires OPENAI_API_KEY.")
+    contract_retriever = build_contract_rag_retriever(settings)
+    policy_retriever = build_policy_rag_retriever(settings)
+
+    workflow = build_approval_assist_workflow(
+        contract_repository=ContractRepository(db),
+        contract_retriever=contract_retriever or ApprovalEmptyContractContextRetriever(),
+        policy_retriever=policy_retriever or ApprovalEmptyPolicyContextRetriever(),
+        chat_model=create_chat_model(settings),
+    )
+    return ContractApprovalAssistApplicationService(workflow)
+
+
+ContractApprovalAssistService = Annotated[
+    ContractApprovalAssistApplicationService,
+    Depends(get_contract_approval_assist_service),
+]
+
+
 @router.post("/import", response_model=ImportContractResponse, response_model_exclude_none=True)
 def import_contract(
     request: ImportContractRequest,
@@ -174,6 +211,20 @@ def check_contract_risk(
     """
 
     return service.check_risk(contract_id)
+
+
+@router.post("/{contract_id}/approval-assist", response_model=ApprovalAssistResponse)
+def assist_contract_approval(
+    contract_id: str,
+    request: ApprovalAssistRequest,
+    service: ContractApprovalAssistService,
+) -> ApprovalAssistResponse:
+    """为当前审批角色生成建议和核对清单。
+
+    该接口是读模型能力，不修改业务表；合同不存在返回 404，缺少模型配置时返回 503。
+    """
+
+    return service.assist(contract_id, request)
 
 
 @router.post("/{contract_id}/approval-records/import", response_model=ImportApprovalRecordsResponse)

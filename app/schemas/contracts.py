@@ -179,3 +179,33 @@ class ContractRiskCheckResponse(ApiModel):
     summary: str = ""
     risk_items: list[RiskItemDto] = Field(default_factory=list)
     agent_trace: list[AgentTraceDto] = Field(default_factory=list)
+
+
+class ApprovalAssistRequest(ApiModel):
+    """审批辅助请求。
+
+    对齐 contract-agent-mvp ApprovalAssistRequest：approver_role 必填，focus 可为空并规范为空串。
+    """
+
+    approver_role: str = Field(min_length=1)
+    focus: str = ""
+
+    @field_validator("focus", mode="before")
+    @classmethod
+    def normalize_focus(cls, value: object) -> str:
+        """focus 允许调用方传 null，内部按参考项目统一视为空关注点。"""
+
+        return "" if value is None else str(value)
+
+
+class ApprovalAssistResponse(ApiModel):
+    """审批辅助响应。
+
+    对齐 contract-agent-mvp ApprovalAssistResponse：建议、核对清单、双通道命中来源和 trace。
+    """
+
+    suggestion: str = ""
+    checklist: list[str] = Field(default_factory=list)
+    retrieved_chunk_ids: list[str] = Field(default_factory=list)
+    retrieved_policy_ids: list[str] = Field(default_factory=list)
+    agent_trace: list[AgentTraceDto] = Field(default_factory=list)
