@@ -15,6 +15,7 @@ from app.ai.rag.ingestion import (
     PolicyVectorIngestionService,
     VectorBatchWriter,
 )
+from app.ai.rag.retrievers import ContractRagRetriever, PolicyRagRetriever
 from app.core.config import Settings, get_settings
 
 
@@ -64,3 +65,26 @@ def build_policy_vector_ingestion_service(
         return None
     store = create_pgvector_store(resolved)
     return PolicyVectorIngestionService(VectorBatchWriter(store, resolved.embedding_batch_size))
+
+
+def build_contract_rag_retriever(settings: Settings | None = None) -> ContractRagRetriever | None:
+    """创建合同通道 RAG retriever。
+
+    检索 query 也需要 embedding；没有模型 key 时返回 None，让后续 API 能明确降级或报依赖未配置。
+    """
+
+    resolved = settings or get_settings()
+    if not resolved.openai_api_key:
+        return None
+    store = create_pgvector_store(resolved)
+    return ContractRagRetriever(store, resolved.rag_contract_top_k)
+
+
+def build_policy_rag_retriever(settings: Settings | None = None) -> PolicyRagRetriever | None:
+    """创建制度通道 RAG retriever。"""
+
+    resolved = settings or get_settings()
+    if not resolved.openai_api_key:
+        return None
+    store = create_pgvector_store(resolved)
+    return PolicyRagRetriever(store, resolved.rag_policy_top_k)

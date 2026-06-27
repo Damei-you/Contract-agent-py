@@ -9,17 +9,32 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.ai.graphs.contract_qa_graph import (
+    EmptyContractContextRetriever,
+    EmptyPolicyContextRetriever,
+    build_contract_qa_workflow,
+)
+from app.ai.langchain_factory import create_chat_model
 from app.ai.rag.ingestion import ContractVectorIngestionService
-from app.ai.rag.vector_store import build_contract_vector_ingestion_service
+from app.ai.rag.vector_store import (
+    build_contract_rag_retriever,
+    build_contract_vector_ingestion_service,
+    build_policy_rag_retriever,
+)
+from app.core.config import get_settings
+from app.core.exceptions import ServiceUnavailableError
 from app.db.session import get_db
 from app.repositories.contracts import ContractRepository
 from app.schemas.contracts import (
+    ContractQaRequest,
+    ContractQaResponse,
     ImportApprovalRecordsRequest,
     ImportApprovalRecordsResponse,
     ImportContractRequest,
     ImportContractResponse,
 )
 from app.services.contract_application import ContractApplicationService
+from app.services.contract_qa import ContractQaApplicationService
 
 router = APIRouter(prefix="/api/contracts", tags=["contracts"])
 
@@ -60,6 +75,30 @@ def get_contract_service(
 ContractService = Annotated[ContractApplicationService, Depends(get_contract_service)]
 
 
+def get_contract_qa_service(db: DbSession) -> ContractQaApplicationService:
+    """创建合同问答应用服务。
+
+    QA 依赖 ChatModel 和两个 RAG retriever；这些外部依赖只在问答接口中创建，避免影响导入类接口。
+    """
+
+    settings = get_settings()
+    if not settings.openai_api_key:
+        raise ServiceUnavailableError("Contract QA requires OPENAI_API_KEY.")
+    contract_retriever = build_contract_rag_retriever(settings)
+    policy_retriever = build_policy_rag_retriever(settings)
+
+    workflow = build_contract_qa_workflow(
+        contract_repository=ContractRepository(db),
+        contract_retriever=contract_retriever or EmptyContractContextRetriever(),
+        policy_retriever=policy_retriever or EmptyPolicyContextRetriever(),
+        chat_model=create_chat_model(settings),
+    )
+    return ContractQaApplicationService(workflow)
+
+
+ContractQaService = Annotated[ContractQaApplicationService, Depends(get_contract_qa_service)]
+
+
 @router.post("/import", response_model=ImportContractResponse, response_model_exclude_none=True)
 def import_contract(
     request: ImportContractRequest,
@@ -72,6 +111,21 @@ def import_contract(
     """
 
     return service.import_contract(request)
+
+
+@router.post("/{contract_id}/qa", response_model=ContractQaResponse)
+def answer_contract_question(
+    contract_id: str,
+    request: ContractQaRequest,
+    service: ContractQaService,
+) -> ContractQaResponse:
+    """基于当前合同条款和适用制度回答问题。
+
+    该接口是读模型能力，不修改业务表；合同不存在返回 404，缺少模型配置时返回 503。
+    """
+
+    return service.answer_question(contract_id, request)
+
 
 @router.post("/{contract_id}/approval-records/import", response_model=ImportApprovalRecordsResponse)
 def import_approval_records(

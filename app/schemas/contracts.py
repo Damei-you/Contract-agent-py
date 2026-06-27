@@ -85,6 +85,26 @@ class ImportContractResponse(ApiModel):
     vector_ingestion_warning: str | None = None
 
 
+class ContractQaRequest(ApiModel):
+    """合同问答请求。
+
+    对齐 contract-agent-mvp ContractQaRequest，仅接收用户自然语言问题。
+    """
+
+    question: str = Field(min_length=1)
+
+
+class ContractQaResponse(ApiModel):
+    """合同问答响应。
+
+    对齐 contract-agent-mvp ContractQaResponse：模型回答与双通道 RAG 命中 ID。
+    """
+
+    answer: str
+    retrieved_chunk_ids: list[str] = Field(default_factory=list)
+    retrieved_policy_ids: list[str] = Field(default_factory=list)
+
+
 class RiskItemDto(ApiModel):
     """审批记录中携带的结构化风险项 DTO。"""
 
