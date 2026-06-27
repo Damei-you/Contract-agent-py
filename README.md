@@ -142,6 +142,14 @@ $env:EMBEDDING_BATCH_SIZE="10"
 $env:VECTOR_COLLECTION_NAME="contract_agent"
 ```
 
+如需调试 LangChain/LangGraph 调用链，可额外开启 LangSmith tracing：
+
+```powershell
+$env:LANGSMITH_TRACING="true"
+$env:LANGSMITH_API_KEY="your_langsmith_api_key"
+$env:LANGSMITH_PROJECT="contract-agent-python"
+```
+
 本地也可以使用 `.env` 文件承载这些变量；`.env` 只放在本机，不提交到 Git。
 
 默认数据库连接为：
@@ -175,6 +183,30 @@ postgresql+psycopg://postgres:123456@localhost:5432/contract-agent-py
 
 - OpenAPI: `http://127.0.0.1:8088/docs`
 - Health: `http://127.0.0.1:8088/health`
+
+## LangChain/LangGraph 本地调试
+
+本项目的 AI 调用链集中在 `app/ai`：
+
+- `chains/`：维护 prompt、模型输出解析和输入上下文格式化。
+- `graphs/`：维护 LangGraph 节点、状态流转和最终响应组装。
+- `rag/`：维护合同条款和制度知识的向量入库、检索和 metadata 边界。
+- `langchain_factory.py`：统一创建 ChatModel、Embeddings，并按配置开启 LangSmith tracing。
+
+本地排查时可以按这个顺序定位：
+
+1. 先确认导入接口没有返回 `vectorIngestionWarning`，否则业务表已写入但向量索引可能没同步。
+2. 调用 `/api/contracts/{id}/qa` 查看 `retrievedChunkIds` 和 `retrievedPolicyIds`，确认双通道 RAG 是否命中预期材料。
+3. 调用 `/api/contracts/{id}/risk-check` 或 `/approval-assist` 查看 `agentTrace`，确认失败或异常结果发生在合同事实、制度依据还是模型生成阶段。
+4. 如果模型回答、风险 JSON 或审批 checklist 不稳定，再开启 LangSmith tracing 查看完整 LangChain 调用链。
+
+开启 LangSmith tracing 后，重启 API 并重新调用问答、风险检查或审批辅助接口。LangSmith 项目页会记录本次模型调用的 prompt、模型输入输出和 runnable 执行链，便于检查：
+
+- prompt 变量是否完整，例如合同摘要、条款上下文、制度依据上下文、审批历史是否为空。
+- RAG 命中是否正确，例如合同通道是否只命中当前合同，制度通道是否匹配当前合同类型。
+- 模型是否返回合法 JSON，例如风险检查的 `riskItems` 或审批辅助的 `checklist`。
+
+LangSmith 是可选调试能力；不配置 `LANGSMITH_API_KEY` 或保持 `LANGSMITH_TRACING=false` 时，项目仍按普通本地模式运行。
 
 ## 测试与代码检查
 
